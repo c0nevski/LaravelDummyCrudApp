@@ -18,7 +18,9 @@ class TasksController extends Controller
      */
     public function index()
     {
-        $tasks = Task::all();
+        // $tasks = Task::all();
+        $tasks = Task::where('owner_id', auth()->id())->get();
+
         return view('tasks.show_tasks')->withTasks($tasks);
     }
 
@@ -48,6 +50,7 @@ class TasksController extends Controller
         $newTask = new Task;
         $newTask->task_title = $validateData['taskTitle'];
         $newTask->task_description = $validateData['taskDescription'];
+        $newTask->owner_id = auth()->id();
 
         // dd($newTask);
         if ( $newTask->save() ) :
@@ -66,9 +69,23 @@ class TasksController extends Controller
      */
     public function show($id)
     {
+
+
         $findTask = Task::findOrFail($id);
 
-        return view('tasks.show_single_task')->withTask($findTask);
+        // if ( $findTask['owner_id'] != auth()->id ) {
+        //     return;
+        // }
+
+        $owner_id = $findTask->owner_id;
+
+        if( $owner_id == auth()->id() ) {
+            return view('tasks.show_single_task')->withTask($findTask);
+        } else {
+            return abort(404);
+        }
+
+        
     }
 
     /**
@@ -80,7 +97,15 @@ class TasksController extends Controller
     public function edit($id)
     {
         $findTask = Task::findOrFail($id);
-        return view('tasks.edit_task')->withTask($findTask);
+        
+
+        $owner_id = $findTask->owner_id;
+
+        if( $owner_id == auth()->id() ) {
+            return view('tasks.edit_task')->withTask($findTask);
+        } else {
+            return abort(404);
+        }
 
     }
 
